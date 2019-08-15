@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t eliolopez/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run elioolopez/react-test npm test -- --coverage
+
+  after_success:
+    - docker build -t eliolopez/multi-client ./client
+    - docker build -t eliolopez/multi-nginx ./nginx
+    - docker build -t eliolopez/multi-server ./server
+    - docker build -t eliolopez/multi-worker ./worker
+    # log in to docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" -- password-stdin
+    # Take those images and push them to docker hub
+    - docker push eliolopez/multi-client
+    - docker push eliolopez/multi-nginx 
+    - docker push eliolopez/multi-server
+    - docker push eliolopez/multi-worker
